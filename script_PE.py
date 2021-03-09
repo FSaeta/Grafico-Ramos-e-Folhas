@@ -32,7 +32,7 @@ def escreve_recovery(nums):
 			arquivo.write(f"{num}\n")
 
 R = '\033[31m' # vermelho
-G = '\033[32m' # verde
+G = '\033[01;32m' # verde
 Y = '\033[01;33m' # amarelo
 C = '\033[36m' # ciano
 W = '\033[0m'  # branco
@@ -43,27 +43,27 @@ __ GERADOR DE GRÁFICO RAMOS E FOLHAS __
 {Y}[1]{W} Instruções (* Recomendado para primeira vez)
 {Y}[2]{W} Criar Novo Gráfico
 
-{R}[0]{W} Sair
+{Y}[0]{W} Sair
 -----------------------------------------
 """
 menu_criar_graf = f"""-----------------------------------------
->> CRIANDO GRÁFICO
+>> {G}CRIANDO GRÁFICO{W}
 
 Selecione a forma de inserir os dados:
 
 {Y}[1]{W} Inserir Números Manualmente
 {Y}[2]{W} Ler Números de um arquivo .txt
 
-{R}[0]{W} Voltar
+{Y}[0]{W} Voltar
 -----------------------------------------
 """
-menu_instrucoes = """-----------------------------------------
+menu_instrucoes = f"""-----------------------------------------
 INSTRUÇÕES A SEREM PROGRAMADAS
 -----------------------------------------
-[0] Voltar
+{Y}[0]{W} Voltar
 """
-msg_nums_txt = """-----------------------------------------
->> CRIANDO GRÁFICO >> LER ARQUIVO .TXT
+msg_nums_txt = f"""-----------------------------------------
+>> {G}CRIANDO GRÁFICO{W} >> {G}LER ARQUIVO .TXT{W}
 
 - Digite o caminho absoluto do arquivo ou apenas o nome 
 dele se estiver na mesma pasta desse programa.
@@ -154,7 +154,7 @@ while pede:
 		try:
 			ler_nums_txt(nums)
 		except FileNotFoundError as e:
-			print(f"\nERRO: Arquivo não foi encontrado no caminho especificado!")
+			print(f"\n{R}ERRO: Arquivo não foi encontrado no caminho especificado!{W}")
 			pede = True
 			id_menu = 2
 
