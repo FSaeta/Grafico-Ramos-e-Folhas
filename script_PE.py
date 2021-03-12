@@ -1,6 +1,10 @@
 import datetime
 import os
 import sys
+from menu import Menu
+
+import pdb
+
 
 def limpar_tela():
 	os.system('cls' if os.name == 'nt' else 'clear')
@@ -10,18 +14,17 @@ limpar_tela()
 print('\nBem Vindo ao meu programa! :)')
 
 def valida_numero(num):
-	if ',' not in num or len(num) > 3:
+	spl_num = num.split(',')
+	if ',' not in num or len(spl_num) > 2 or len(spl_num[1]) != 1:
 		raise TypeError
-	int(num[0])
-	int(num[2])
+	int(spl_num[0])
+	int(spl_num[1])
 
 def valida_opcao(opcao, menu_id):
-	if menu_id in (1,2):
-		if opcao not in [0, 1, 2]:
-			raise ValueError
-	elif menu_id == 3:
-		if opcao != 0:
-			raise ValueError
+	menu = menus[menu_id]
+	op_permitidas = list(menu.opcoes.keys())
+	if opcao not in op_permitidas:
+		raise ValueError
 
 def escreve_recovery(nums):
 	with open('recovery.txt', 'a') as arquivo:
@@ -73,46 +76,52 @@ Windows:  C:\\Users\\Fernando\\arquivo.txt
 Linux:    /home/fernando/arquivo.txt
 ___
 """
-menu = {1: boas_vindas, 2: menu_criar_graf, 3: menu_instrucoes}
+def mudar_id(novo_id):
+	global id_menu
+	id_menu = novo_id
+	return id_menu
+
+def muda_pede():
+	global pede
+	pede = not pede
+
+menus = {1: Menu(nome="Menu Inicial", id=1,
+				 msg=boas_vindas,
+				 op_dict={0:((sys.exit,[]),), 1:((mudar_id,[3]),), 2:((mudar_id,[2]),)}
+				 ),
+		 2: Menu(nome="Menu Criando Grafico", id=2,
+				 msg=menu_criar_graf, 
+				 op_dict={0: ((mudar_id,[1]),), 1: ((muda_pede,[]),), 2: ((muda_pede,[]),)}
+				 ), 
+		 3: Menu(nome="Menu Instuções", id=3, 
+		 		 msg=menu_instrucoes, 
+		 		 op_dict={0: ((mudar_id,[1]),)}
+		 		 )}
+
 id_menu = 1
 
 def mostra_menu(menu_id):
+	# pdb.set_trace()
 	global id_menu, pede
-	sair = False
+	menu = menus[id_menu]
 	try:
-		print(menu[id_menu])
+		print(menu.msg)
 		opcao = int(input("Digite a opcão: "))
 		valida_opcao(opcao, menu_id)
+		ret = menu.exec_funcs(opcao)
+		#if 'mudar_id' in ret.keys():
+		#	id_menu = ret['mudar_id']
 
-		if menu_id == 1:
-			if opcao == 1:
-				id_menu = 3
-				limpar_tela()
-			elif opcao == 2:
-				id_menu = 2
-				limpar_tela()
-			else:
-				sair = True
+		limpar_tela()
+		return opcao
 
-		elif menu_id == 2:
-			if opcao in (1, 2):
-				pede = False
-				return opcao
-			elif opcao == 0:
-				id_menu = 1
-				limpar_tela()
-
-		elif menu_id == 3:
-			if opcao == 0:
-				id_menu = 1
-
-	except:
+	except SystemExit:
+		sys.exit()
+	except Exception:
 		try:
 			print(f"Opcão [{opcao}] Inválida !")
 		except:
 			print("Você deve digitar uma opção válida !")
-	if sair:
-		sys.exit()
 
 nums = []
 def pedir_numeros():
@@ -132,31 +141,34 @@ def pedir_numeros():
 				pede = True
 		except Exception:
 			print("! X ! X ! X ! X ! X ! X !\nParece que você cometeu algum Erro!\n! X ! X ! X ! X ! X ! X !")
-def ler_nums_txt(nums):
+
+def ler_nums_txt():
 	path = input("Digite o caminho do arquivo: ")
 	with open(path, 'r') as arquivo:
 		lines = arquivo.readlines()
 		for num in lines:
+			num = num.replace('\n', '')
 			try:
 				valida_numero(num)
-			except TypeError:
+			except (TypeError, ValueError) as e:
 				print(f"Elemento <{num}> não foi adicionado devido ao formato dele.")
-
 pede = True
 while pede:
-	selected = mostra_menu(id_menu)
+	id_anterior = id_menu
+	selected = mostra_menu(id_anterior)
 
-	if selected == 1:
-		pedir_numeros()
-	elif selected == 2:
-		limpar_tela()
-		print(msg_nums_txt)
-		try:
-			ler_nums_txt(nums)
-		except FileNotFoundError as e:
-			print(f"\n{R}ERRO: Arquivo não foi encontrado no caminho especificado!{W}")
-			pede = True
-			id_menu = 2
+	if id_anterior == 2 and id_menu == 2:
+		if selected == 1:
+			pedir_numeros()
+		elif selected == 2:
+			limpar_tela()
+			print(msg_nums_txt)
+			try:
+				ler_nums_txt()
+			except FileNotFoundError as e:
+				print(f"\n{R}ERRO: Arquivo não foi encontrado no caminho especificado!{W}")
+				pede = True
+				id_menu = 2
 
 
 def criar_dict_graf(numeros):
@@ -198,10 +210,9 @@ def montar_graf(data):
 	for i in ramos:
 		if len(i) == 1:
 			linha = f" {i}|{data[i]}"
-		elif len(i) == 2:
+		else:
 			linha = f"{i}|{data[i]}"
 		grafico += linha + '\n'
-	print(ramos)
 	return grafico
 
 
